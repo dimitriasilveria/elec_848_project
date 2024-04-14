@@ -20,11 +20,12 @@ Np = p*dt_max;
 t = 0:dt_max:t_max;
 t_MPC = 0:dt_max:(t_max+Np);
 
+Q_p = Qp*ones(n*p-n,1);
+Q_t = Qt*ones(n,1);
+Q = [Q_p;Q_t];
+Q = Q.*kron(eye(n),eye(p));
 
-
-Q = Qp*eye(p);
-Q(p,p) = Qt;
-R = Ru*eye(m);
+R = Ru.*kron(eye(n),eye(m));
 
 % Initial link angular position, in rad
 theta_0 = zeros(n,1);
@@ -35,21 +36,20 @@ theta_dot0 = zeros(n,1);
 %% Dummy Feedback
 
 q_ref = [sin(0.1*t_MPC);sin(0.5*t_MPC);sin(1*t_MPC)];
-
 dq_ref = [0.1*cos(0.1*t_MPC);0.5*cos(0.5*t_MPC);1*cos(1*t_MPC)];
 
-q = 0.9.*[sin(0.1*t_MPC);sin(0.5*t_MPC);sin(1*t_MPC)];
-
-dq = 0.9.*[0.1*cos(0.1*t_MPC);0.5*cos(0.5*t_MPC);1*cos(1*t_MPC)];
+q = zeros(3,length(t));
+dq = zeros(3,length(t));
 
 U_old = zeros(n*p,1);
 
 %% MPC Controller
 
-% for i = 1:length(t)
+for i = 1:length(t)
+    
     %Dynamics from MPC Model
-    i = 1;
-    [T,Jacobi, M,C,G]    = fwdKIN(q_ref(:,i), dq_ref(:,i),g);
+    
+    [T,Jacobi, M,C,G]    = fwdKIN(q(:,i), dq(:,i),g);
     Cqdot = C*dq_ref(:,i);
     [A,B,C,D] = state_space_matrices(M,Cqdot,G,n, dt_max);
 
@@ -65,6 +65,19 @@ U_old = zeros(n*p,1);
     
     E = Y_ref - S*x - W*U_old - V;
 
+    dU = MPC_optimization(E,W,R,L, Q);
+
+    U = U_old + L*dU;
+
+    U_old = U;
     
+    % Controller Input
+    U_controller = U(1:3);
+
+    %Manipulator Dynamics
+    ddq = M\(U_controller - Cqdot - G);
+    
+    dq = 
 
 
+end
