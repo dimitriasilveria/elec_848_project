@@ -56,7 +56,7 @@ for i = 1:length(t)
     %Dynamics from MPC Model
     
     [T,Jacobi, M,C,G]    = fwdKIN(q(:,i), dq(:,i),g);
-    Cqdot = C*dq_ref(:,i);
+    Cqdot = C*dq(:,i);
     [A,B,C,D] = state_space_matrices(M,Cqdot,G,n, dt_max);
 
     [S,W,V,L] = state_space_combine(p, m,n, Np,C,A,D,B);
@@ -73,9 +73,10 @@ for i = 1:length(t)
 
     dU = MPC_optimization(E,W,R,L, Q);
     
-    dU_sat = min(1, max(-1, dU));
+    dU_sat = min(8, max(-8, dU));
 
     U = U_old + L*dU_sat;
+    U = min(20, max(-20, U));
 
     U_old = U;
     
