@@ -40,8 +40,14 @@ dq_ref = [0.1*cos(0.1*t_MPC);0.5*cos(0.5*t_MPC);1*cos(1*t_MPC)];
 
 q = zeros(3,length(t));
 dq = zeros(3,length(t));
+ddq = zeros(3,length(t));
+
+e1 = zeros(3,length(t));
+e2 = zeros(3,length(t));
 
 U_old = zeros(n*p,1);
+
+U_controller = zeros(3,length(t));
 
 %% MPC Controller
 
@@ -66,18 +72,50 @@ for i = 1:length(t)
     E = Y_ref - S*x - W*U_old - V;
 
     dU = MPC_optimization(E,W,R,L, Q);
+    
+    dU_sat = min(1, max(-1, dU));
 
-    U = U_old + L*dU;
+    U = U_old + L*dU_sat;
 
     U_old = U;
     
     % Controller Input
-    U_controller = U(1:3);
+    U_controller(:,i) = U(1:3);
 
     %Manipulator Dynamics
-    ddq = M\(U_controller - Cqdot - G);
-    
-    dq = 
+    ddq(:,i) = M\(U_controller(:,i) - Cqdot - G);
 
+    q(:,i+1) =  q(:,i) + dq(:,i)*dt_max + ddq(:,i)*dt_max*dt_max/2;
+    dq(:,i+1) =  dq(:,i) + ddq(:,i)*dt_max;
+    e1(:,i) = q_ref(:,i) - q(:,i);  
+    e2(:,i) = dq_ref(:,i) - dq(:,i); 
 
 end
+
+
+%% 
+fig=figure(1);
+subplot(3,1,1)
+plot(t, q(:,1:end-1),LineWidth=1.5)
+hold on
+plot(t_MPC, q_ref,'r--',LineWidth=1.5)
+legend('Actual','Desired')
+hold off
+xlabel('Time[s]')
+ylabel('Angular Pos[rad]')
+title('Pendulum')
+grid on
+% ylim([-2 +2])
+subplot(3,1,2)
+plot(t, e1,LineWidth=1.5);
+xlabel('Time[s]')
+ylabel('Angular Error[rad]')
+grid on
+% ylim([-2 +2])
+subplot(3,1,3)
+plot(t, U_controller,LineWidth=1.5);
+%ylim([0 max(v1(:,1))+100])
+xlabel('Time [s]');
+ylabel('Inputs')
+grid on
+% ylim([-2 +2])
