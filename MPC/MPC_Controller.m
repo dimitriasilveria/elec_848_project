@@ -25,7 +25,7 @@ Qp = 300;
 Qt = 500;
 %Control weight matrix
 % Ru=1;
-Ru=100;
+Ru=1.;
 
 %Maximum Simulation time [sec]
 t_max = 5;
@@ -52,13 +52,14 @@ R = Ru.*kron(eye(n),eye(m));
 %% Initialization
 
 %Trajectory
-q_ref = [2*sin(2*t_MPC);2*sin(2*t_MPC);2*sin(2*t_MPC)];
-dq_ref = [2*0.1*cos(0.1*t_MPC);2*0.5*cos(0.5*t_MPC);2*1*cos(1*t_MPC)];
+% q_ref = [2*sin(2*t_MPC);2*sin(2*t_MPC);2*sin(2*t_MPC)];
+% dq_ref = [2*0.1*cos(0.1*t_MPC);2*0.5*cos(0.5*t_MPC);2*1*cos(1*t_MPC)];
 % q_ref = [2*sin(0.1*t_MPC);2*sin(0.5*t_MPC);2*sin(1*t_MPC)];
 % dq_ref = [2*0.1*cos(0.1*t_MPC);2*0.5*cos(0.5*t_MPC);2*1*cos(1*t_MPC)];
 % qt = [pi/4;pi/6;-pi/4];
 % q0 = [0;0;0];
-
+q_ref = [t_MPC*0.1;t_MPC*0.1;t_MPC*0.1];
+dq_ref = 0.1*ones(n,length(t_MPC));
 
 
 %Initializa system states
@@ -76,13 +77,14 @@ U_controller = zeros(3,length(t));
 
 %% MPC Controller
 
-for i = 1:length(t)
+for i = 2:length(t)
     
     %Dynamics from MPC Model
-    [T,Jacobi, M,C,G]  = fwdKIN(q(:,i), dq(:,i),g);
-    % [T,Jacobi, M,C,G]  = fwdKIN(q_ref(:,i), dq_ref(:,i),g);
+    [T,Jacobi, M,C,G]  = fwdKIN(q(:,i-1), dq(:,i-1),g);
+    % [T,Jacobi, M,C,G]  = fwdKIN(q_ref(:,i-1), dq_ref(:,i-1),g);
 
-    Cqdot = C*dq(:,i);
+    Cqdot = C*dq(:,i-1);
+    % Cqdot = C*dq_ref(:,i-1);
     [A,B,C,D] = state_space_matrices(M,Cqdot,G,n, dt_max);
 
     [S,W,V,L] = state_space_combine(p, m,n, Np,C,A,D,B);
@@ -93,14 +95,14 @@ for i = 1:length(t)
         Y_ref = [Y_ref; q_ref(:,i+j)];
     end
     
-    x = [q(:,i);dq(:,i)];
+    x = [q(:,i-1);dq(:,i-1)];
     
     E = Y_ref - S*x - W*U_old - V;
 
     dU = MPC_optimization(E,W,R,L, Q);
     
     dU_sat = min(8, max(-8, dU));
-    % dU_sat = dU;
+    %dU_sat = dU;
 
     U = U_old + L*dU_sat;
     U = min(20, max(-20, U));
@@ -111,12 +113,14 @@ for i = 1:length(t)
     % Controller Input
     U_controller(:,i) = U(1:3);
     % U_controller(:,i) = 20*ones(3,1);
-
-    %Manipulator Dynamics
+    
+     [T,Jacobi, M,C,G]  = fwdKIN(q(:,i-1), dq(:,i-1),g);
+     Cqdot = C*dq(:,i-1);
+    %Mancipulator Dynamics
     ddq(:,i) = M\(U_controller(:,i) - Cqdot - G);
 
-    q(:,i+1) =  q(:,i) + dq(:,i)*dt_max + ddq(:,i)*dt_max*dt_max/2;
-    dq(:,i+1) =  dq(:,i) + ddq(:,i)*dt_max;
+    q(:,i) =  q(:,i-1) + dq(:,i-1)*dt_max + ddq(:,i)*dt_max*dt_max/2;
+    dq(:,i) =  dq(:,i-1) + ddq(:,i)*dt_max;
     e1(:,i) = q_ref(:,i) - q(:,i);  
     % e2(:,i) = dq_ref(:,i) - dq(:,i); 
 
@@ -126,7 +130,7 @@ end
 %% 
 fig=figure(1);
 subplot(3,3,1)
-plot(t, q(1,1:end-1),LineWidth=1.5)
+plot(t, q(1,1:end),LineWidth=1.5)
 hold on
 plot(t_MPC, q_ref(1,:),'r--',LineWidth=1.5)
 legend('Actual','Desired')
@@ -137,7 +141,7 @@ title('Joint 01')
 grid on
 % ylim([-2 +2])
 subplot(3,3,2)
-plot(t, q(2,1:end-1),LineWidth=1.5)
+plot(t, q(2,1:end),LineWidth=1.5)
 hold on
 plot(t_MPC, q_ref(2,:),'r--',LineWidth=1.5)
 legend('Actual','Desired')
@@ -148,7 +152,7 @@ title('Joint 02')
 grid on
 % ylim([-2 +2])
 subplot(3,3,3)
-plot(t, q(3,1:end-1),LineWidth=1.5)
+plot(t, q(3,1:end),LineWidth=1.5)
 hold on
 plot(t_MPC, q_ref(3,:),'r--',LineWidth=1.5)
 legend('Actual','Desired')
