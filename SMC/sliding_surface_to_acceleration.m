@@ -10,6 +10,13 @@ for i =1:length(sat)
         sat(i)=h*s(i);
     end
 end
-s_dot = -K1.*s-K2.*sat;
 
-q_ddot = q_d_ddot + mu_1*(m/p)*e.^((m/p)-1).*e_dot + mu_2*(k/l)*e.^((k/l)-1).*e_dot - s_dot;
+s_dot = -K1.*s-K2.*sat;
+for i =1:length(sat)
+
+    if e(i)== 0
+        q_ddot(i) = q_d_ddot(i);
+    else
+        q_ddot(i) = q_d_ddot(i) + mu_1*(m/p)*e(i).^((m/p)-1).*e_dot(i) + mu_2*(k/l)*e(i).^((k/l)-1).*e_dot(i) - s_dot(i);
+    end
+end

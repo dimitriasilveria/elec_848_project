@@ -12,10 +12,10 @@ mu_1 = 1;
 mu_2 = 3;
 m = 7;
 p = 5;
-% k = 5;
-% l = 7;
-k = 7;
-l = 5;
+k = 5;
+l = 7;
+% k = 7;
+% l = 5;
 K1 = ones(n,1)*20;
 K2 = ones(n,1)*2;
 delta = 0.5;
@@ -72,8 +72,8 @@ for i = 1:length(t)
     ddq(:,i) = M\(U(:,i) - C*dq(:,i) - G);
     q(:,i+1) =  q(:,i) + dq(:,i)*dt_max + ddq(:,i)*dt_max*dt_max/2;
     dq(:,i+1) =  dq(:,i) + ddq(:,i)*dt_max;
-    e1(:,i) = q_ref(:,i) - q(:,i);  
-    % e2(:,i) = dq_ref(:,i) - dq(:,i); 
+    e1(:,i+1) = q_ref(:,i) - q(:,i);  
+    e2(:,i+1) = dq_ref(:,i) - dq(:,i); 
 
 end
 
@@ -116,19 +116,19 @@ grid on
 % ylim([-2 +2])
 
 subplot(3,3,4)
-plot(t, e1(1,:),LineWidth=1.5);
+plot(t, e1(1,1:end-1),LineWidth=1.5);
 xlabel('Time[s]')
 ylabel('Angular Error[rad]')
 grid on
 % ylim([-2 +2])
 subplot(3,3,5)
-plot(t, e1(2,:),LineWidth=1.5);
+plot(t, e1(2,1:end-1),LineWidth=1.5);
 xlabel('Time[s]')
 ylabel('Angular Error[rad]')
 grid on
 % ylim([-2 +2])
 subplot(3,3,6)
-plot(t, e1(3,:),LineWidth=1.5);
+plot(t, e1(3,1:end-1),LineWidth=1.5);
 xlabel('Time[s]')
 ylabel('Angular Error[rad]')
 grid on
