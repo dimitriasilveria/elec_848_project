@@ -10,7 +10,7 @@ L2 = [];
 for i = 1:p
     S = [S;C*A.^i];
 end
-l_v = C*D*0;
+l_v = C*D.*0;
 k = p;
 for i = 1:p
    if i < p
@@ -27,7 +27,7 @@ for i = 1:p
        if j<=i
            l = [l C*A.^(i-j)*B];
        else
-           l = [l 0*C*A*B];
+           l = [l 0.*C*A*B];
        end
   
    end
