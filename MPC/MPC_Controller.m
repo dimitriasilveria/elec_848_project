@@ -52,14 +52,15 @@ R = Ru.*kron(eye(n),eye(m));
 %% Initialization
 
 %Trajectory
-% q_ref = [2*sin(2*t_MPC);2*sin(2*t_MPC);2*sin(2*t_MPC)];
-% dq_ref = [2*0.1*cos(0.1*t_MPC);2*0.5*cos(0.5*t_MPC);2*1*cos(1*t_MPC)];
+q_ref = [2*sin(2*t_MPC);2*sin(2*t_MPC);2*sin(2*t_MPC)];
+dq_ref = [2*0.1*cos(0.1*t_MPC);2*0.5*cos(0.5*t_MPC);2*1*cos(1*t_MPC)];
 % q_ref = [2*sin(0.1*t_MPC);2*sin(0.5*t_MPC);2*sin(1*t_MPC)];
 % dq_ref = [2*0.1*cos(0.1*t_MPC);2*0.5*cos(0.5*t_MPC);2*1*cos(1*t_MPC)];
 % qt = [pi/4;pi/6;-pi/4];
 % q0 = [0;0;0];
-q_ref = [t_MPC*0.1;t_MPC*0.1;t_MPC*0.1];
-dq_ref = 0.1*ones(n,length(t_MPC));
+% q_ref = [t_MPC.*0.;t_MPC.*0;t_MPC.*0];
+% %dq_ref = 0.1*ones(n,length(t_MPC));
+% dq_ref = [0.1*zeros(1,length(t_MPC));zeros(2,length(t_MPC))];
 
 
 %Initializa system states
@@ -74,6 +75,7 @@ e2 = zeros(3,length(t));
 %Control signals
 U_old = zeros(n*p,1);
 U_controller = zeros(3,length(t));
+tau = zeros(3,length(t));
 
 %% MPC Controller
 
@@ -81,10 +83,10 @@ for i = 2:length(t)
     
     %Dynamics from MPC Model
     [T,Jacobi, M,C,G]  = fwdKIN(q(:,i-1), dq(:,i-1),g);
-    % [T,Jacobi, M,C,G]  = fwdKIN(q_ref(:,i-1), dq_ref(:,i-1),g);
+    %[T,Jacobi, M,C,G]  = fwdKIN(q_ref(:,i), dq_ref(:,i),g);
 
     Cqdot = C*dq(:,i-1);
-    % Cqdot = C*dq_ref(:,i-1);
+    %Cqdot = C*dq_ref(:,i);
     [A,B,C,D] = state_space_matrices(M,Cqdot,G,n, dt_max);
 
     [S,W,V,L] = state_space_combine(p, m,n, Np,C,A,D,B);
@@ -115,9 +117,10 @@ for i = 2:length(t)
     % U_controller(:,i) = 20*ones(3,1);
     
      [T,Jacobi, M,C,G]  = fwdKIN(q(:,i-1), dq(:,i-1),g);
-     Cqdot = C*dq(:,i-1);
+    Cqdot = C*dq(:,i-1);
+    tau(:,i) = M*U_controller(:,i) + Cqdot + G;
     %Mancipulator Dynamics
-    ddq(:,i) = M\(U_controller(:,i) - Cqdot - G);
+    ddq(:,i) = M\(tau(:,i) - Cqdot - G);
 
     q(:,i) =  q(:,i-1) + dq(:,i-1)*dt_max + ddq(:,i)*dt_max*dt_max/2;
     dq(:,i) =  dq(:,i-1) + ddq(:,i)*dt_max;
