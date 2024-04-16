@@ -244,7 +244,7 @@ hold off
 xlabel('x[m]');
 ylabel('y[m]');
 zlabel('z[m]');
-legend('Reference Trajecotry','Tracking Trajectory')
+legend('Reference Trajectory','Tracking Trajectory','Location','best')
 exportgraphics(fig, "MPC_CartesianSpace.png")
 
 fig=figure(3);
@@ -252,4 +252,5 @@ plot(t(:,1:end-1), e_Traj(:,1:end-1),LineWidth=1.5);
 xlabel('Time[s]')
 ylabel('RMS Tracking Error[rad]')
 grid on
+title('Tracking Error')
 exportgraphics(fig, "MPC_TrackingError.png")
