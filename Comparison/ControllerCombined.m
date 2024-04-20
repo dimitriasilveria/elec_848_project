@@ -67,20 +67,7 @@ R = Ru.*kron(eye(n),eye(m_MPC));
 
 %% Initialization
 
-%Trajectory
-% q_ref = [2*sin(2*t_MPC);2*sin(2*t_MPC);2*sin(2*t_MPC)];
-% dq_ref = [2*0.1*cos(0.1*t_MPC);2*0.5*cos(0.5*t_MPC);2*1*cos(1*t_MPC)];
-
-% q_ref = [2*sin(0.1*t_MPC);2*sin(0.5*t_MPC);2*sin(1*t_MPC)];
-% dq_ref = [2*0.1*cos(0.1*t_MPC);2*0.5*cos(0.5*t_MPC);2*1*cos(1*t_MPC)];
-
-% q_ref = [t_MPC.*0.;t_MPC.*0;t_MPC.*0];
-% %dq_ref = 0.1*ones(n,length(t_MPC));
-% dq_ref = [0.1*zeros(1,length(t_MPC));zeros(2,length(t_MPC))];
-
-% q_ref = [2*sin(2*t_MPC);2*sin(2*t_MPC);2*sin(2*t_MPC)];
-% dq_ref = [2*0.1*cos(0.1*t_MPC);2*0.5*cos(0.5*t_MPC);2*1*cos(1*t_MPC)];
-
+%Trajectory 01
 qt = [pi/4;pi/6;-pi/4];
 q0 = [0;0;0];
 traj_endPoint = [q0 qt];
@@ -103,6 +90,11 @@ dq_ref = [zeros(3,1) dq_ref];
 diff_dq = diff(dq_ref,1,2);
 ddq_ref = diff_dq./dt_max;
 ddq_ref = [zeros(3,1) ddq_ref];
+
+% %Trajectory 02
+% q_ref = [1.75+1*sin(2*pi*1*t_MPC);-1.8+0.5*sin(2*pi*1*t_MPC);1.75+0.3*cos(2*pi*1*t_MPC)];
+% dq_ref = 2*pi*[1*cos(2*pi*1*t_MPC);0.5*cos(2*pi*1*t_MPC);-0.3*sin(2*pi*1*t_MPC)];
+% ddq_ref = 4*pi*pi*[-1*sin(2*pi*1*t_MPC);-0.5*sin(2*pi*1*t_MPC);-0.3*cos(2*pi*1*t_MPC)];
 
 
 %Initialize system states
@@ -140,6 +132,8 @@ p_TrajCart = zeros(3,length(t));
 e_Traj_MPC = zeros(1,length(t));
 e_Traj_SMC = zeros(1,length(t));
 
+e_TrajXYZ_MPC = zeros(3,length(t));
+e_TrajXYZ_SMC = zeros(3,length(t));
 
 %% MPC Controller
 
@@ -192,7 +186,8 @@ for i = 2:length(t)
     p_Cart_MPC(:,i-1) = T(1:3,4);
     p_TrajCart(:,i-1) = T_traj(1:3,4);
     e_Traj_MPC(:,i-1) = rms(p_TrajCart(:,i-1)-p_Cart_MPC(:,i-1));
-    
+    e_TrajXYZ_MPC(:,i-1) = (p_TrajCart(:,i-1)-p_Cart_MPC(:,i-1));
+
     %SMC   
     [T,Jacobi, M,C,G]  = fwdKIN(q_SMC(:,i-1), dq_SMC(:,i-1),g);
 
@@ -210,7 +205,7 @@ for i = 2:length(t)
     p_Cart_SMC(:,i) = real(T(1:3,4));
     p_TrajCart(:,i) = T_traj(1:3,4);
     e_Traj_SMC(:,i) = rms(p_TrajCart(:,i)-p_Cart_SMC(:,i));
-
+    e_TrajXYZ_SMC(:,i) = (p_TrajCart(:,i)-p_Cart_SMC(:,i));
 
 end
 
@@ -315,7 +310,7 @@ legend('MPC','SMC')
 xlabel('Time [s]');
 ylabel('Torque [N.m]')
 grid on
-exportgraphics(fig, "COMP_JointSpace.png")
+% exportgraphics(fig, "COMP_JointSpace.png")
 
 fig=figure(2);
 plot3(p_Cart_MPC(1,2:end-1),p_Cart_MPC(2,2:end-1),p_Cart_MPC(3,2:end-1),LineWidth=1.5);
@@ -327,7 +322,7 @@ xlabel('x[m]');
 ylabel('y[m]');
 zlabel('z[m]');
 legend('MPC Tracking Trajectory','SMC Tracking Trajectory','Reference Trajectory','Location','best')
-exportgraphics(fig, "COMP_CartesianSpace.png")
+% exportgraphics(fig, "COMP_CartesianSpace.png")
 
 fig=figure(3);
 plot(t(:,1:end-1), e_Traj_MPC(:,1:end-1),LineWidth=1.5);
@@ -336,7 +331,43 @@ plot(t(:,1:end-1), e_Traj_SMC(:,1:end-1),LineWidth=1.5);
 hold off
 legend('MPC','SMC')
 xlabel('Time[s]')
-ylabel('RMS Tracking Error[rad]')
+ylabel('RMS Tracking Error[m]')
 grid on
 title('Tracking Error')
-exportgraphics(fig, "COMP_TrackingError.png")
+% exportgraphics(fig, "COMP_TrackingError.png")
+
+
+
+fig = figure(4);
+subplot(3,1,1)
+plot(t(:,1:end-1), e_TrajXYZ_MPC(1,1:end-1),LineWidth=1.5);
+hold on
+plot(t(:,1:end-1), e_TrajXYZ_SMC(1,1:end-1),LineWidth=1.5);
+hold off
+legend('MPC','SMC')
+xlabel('Time[s]')
+ylabel('Error[m]')
+title('X Axis Error')
+grid on
+subplot(3,1,2)
+plot(t(:,1:end-1), e_TrajXYZ_MPC(2,1:end-1),LineWidth=1.5)
+hold on
+plot(t(:,1:end-1), e_TrajXYZ_SMC(2,1:end-1),LineWidth=1.5);
+hold off
+xlabel('Time[s]')
+legend('MPC','SMC')
+ylabel('Error[m]')
+title('Y Axis Error')
+grid on
+subplot(3,1,3)
+plot(t(:,1:end-1), e_TrajXYZ_MPC(3,1:end-1),LineWidth=1.5)
+hold on
+plot(t(:,1:end-1), e_TrajXYZ_SMC(3,1:end-1),LineWidth=1.5);
+hold off
+xlabel('Time[s]')
+legend('MPC','SMC')
+xlabel('Time[s]')
+ylabel('Error[m]')
+title('Z Axis Error')
+grid on
+% exportgraphics(fig, "COMP_TrackingErrorXYZ.png")

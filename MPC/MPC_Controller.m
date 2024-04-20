@@ -102,6 +102,7 @@ tau = zeros(3,length(t));
 p_Cart = zeros(3,length(t));
 p_TrajCart = zeros(3,length(t));
 e_Traj = zeros(1,length(t));
+e_TrajXYZ = zeros(3,length(t));
 %% MPC Controller
 
 for i = 2:length(t)
@@ -158,8 +159,8 @@ for i = 2:length(t)
     p_Cart(:,i-1) = T(1:3,4);
     p_TrajCart(:,i-1) = T_traj(1:3,4);
     e_Traj(:,i-1) = rms(p_TrajCart(:,i-1)-p_Cart(:,i-1));
+    e_TrajXYZ(:,i-1) = (p_TrajCart(:,i-1)-p_Cart(:,i-1));
 end
-
 
 %% 
 fig=figure(1);
@@ -234,7 +235,7 @@ plot(t, U_controller(3,:),LineWidth=1.5);
 xlabel('Time [s]');
 ylabel('Torque [N.m]')
 grid on
-exportgraphics(fig, "MPC_JointSpace.png")
+% exportgraphics(fig, "MPC_JointSpace.png")
 
 fig=figure(2);
 plot3(p_TrajCart(1,2:end-1),p_TrajCart(2,2:end-1),p_TrajCart(3,2:end-1),'--',LineWidth=1.5);
@@ -245,12 +246,33 @@ xlabel('x[m]');
 ylabel('y[m]');
 zlabel('z[m]');
 legend('Reference Trajectory','Tracking Trajectory','Location','best')
-exportgraphics(fig, "MPC_CartesianSpace.png")
+% exportgraphics(fig, "MPC_CartesianSpace.png")
 
 fig=figure(3);
 plot(t(:,1:end-1), e_Traj(:,1:end-1),LineWidth=1.5);
 xlabel('Time[s]')
-ylabel('RMS Tracking Error[rad]')
+ylabel('RMS Tracking Error[m]')
 grid on
 title('Tracking Error')
 exportgraphics(fig, "MPC_TrackingError.png")
+
+fig = figure(4);
+subplot(3,1,1)
+plot(t(:,1:end-1), e_TrajXYZ(1,1:end-1),LineWidth=1.5)
+xlabel('Time[s]')
+ylabel('Error[m]')
+title('X Axis Error')
+grid on
+subplot(3,1,2)
+plot(t(:,1:end-1), e_TrajXYZ(2,1:end-1),LineWidth=1.5)
+xlabel('Time[s]')
+ylabel('Error[m]')
+title('Y Axis Error')
+grid on
+subplot(3,1,3)
+plot(t(:,1:end-1), e_TrajXYZ(3,1:end-1),LineWidth=1.5)
+xlabel('Time[s]')
+ylabel('Error[m]')
+title('Z Axis Error')
+grid on
+exportgraphics(fig, "MPC_TrackingErrorXYZ.png")
