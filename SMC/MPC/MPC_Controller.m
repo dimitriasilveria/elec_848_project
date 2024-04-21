@@ -51,7 +51,7 @@ R = Ru.*kron(eye(n),eye(m));
 
 %% Initialization
 
-%Trajectory 01
+%Trajectory
 % q_ref = [2*sin(2*t_MPC);2*sin(2*t_MPC);2*sin(2*t_MPC)];
 % dq_ref = [2*0.1*cos(0.1*t_MPC);2*0.5*cos(0.5*t_MPC);2*1*cos(1*t_MPC)];
 
@@ -65,8 +65,6 @@ R = Ru.*kron(eye(n),eye(m));
 % q_ref = [2*sin(2*t_MPC);2*sin(2*t_MPC);2*sin(2*t_MPC)];
 % dq_ref = [2*0.1*cos(0.1*t_MPC);2*0.5*cos(0.5*t_MPC);2*1*cos(1*t_MPC)];
 
-
-%Trajectory 02
 qt = [pi/4;pi/6;-pi/4];
 q0 = [0;0;0];
 traj_endPoint = [q0 qt];
@@ -122,6 +120,7 @@ for i = 2:length(t)
     
     Y_ref = [];
     for j = 0:p-1
+        % Y_ref = [Y_ref; q_ref(:,i+j);dq_ref(:,i+j)];
         Y_ref = [Y_ref; q_ref(:,i+j)];
     end
     
@@ -146,9 +145,8 @@ for i = 2:length(t)
     % [T,Jacobi, M,C,G]  = fwdKIN(q(:,i-1), dq(:,i-1),g);
     % Cqdot = C*dq(:,i-1);
     tau(:,i) = M*U_controller(:,i) + Cqdot + G;
-    tau(:,i) = min(100, max(-100, tau(:,i)));
     
-    %Manipulator Dynamics
+    %Mancipulator Dynamics
     ddq(:,i) = M\(tau(:,i) - Cqdot - G);
 
     q(:,i) =  q(:,i-1) + dq(:,i-1)*dt_max + ddq(:,i)*dt_max*dt_max/2;
@@ -165,116 +163,116 @@ for i = 2:length(t)
 end
 toc
 %% 
-fig=figure(1);
-subplot(3,3,1)
-plot(t, q(1,1:end),LineWidth=1.5)
-hold on
-plot(t_MPC, q_ref(1,:),'r--',LineWidth=1.5)
-legend('Actual','Desired')
-hold off
-xlabel('Time[s]')
-ylabel('Angular Pos[rad]')
-title('Joint 01')
-grid on
-% ylim([-2 +2])
-subplot(3,3,2)
-plot(t, q(2,1:end),LineWidth=1.5)
-hold on
-plot(t_MPC, q_ref(2,:),'r--',LineWidth=1.5)
-legend('Actual','Desired')
-hold off
-xlabel('Time[s]')
-ylabel('Angular Pos[rad]')
-title('Joint 02')
-grid on
-% ylim([-2 +2])
-subplot(3,3,3)
-plot(t, q(3,1:end),LineWidth=1.5)
-hold on
-plot(t_MPC, q_ref(3,:),'r--',LineWidth=1.5)
-legend('Actual','Desired')
-hold off
-xlabel('Time[s]')
-ylabel('Angular Pos[rad]')
-title('Joint 03')
-grid on
-% ylim([-2 +2])
-
-subplot(3,3,4)
-plot(t, e1(1,:),LineWidth=1.5);
-xlabel('Time[s]')
-ylabel('Angular Error[rad]')
-grid on
-% ylim([-2 +2])
-subplot(3,3,5)
-plot(t, e1(2,:),LineWidth=1.5);
-xlabel('Time[s]')
-ylabel('Angular Error[rad]')
-grid on
-% ylim([-2 +2])
-subplot(3,3,6)
-plot(t, e1(3,:),LineWidth=1.5);
-xlabel('Time[s]')
-ylabel('Angular Error[rad]')
-grid on
-% ylim([-2 +2])
-
-
-subplot(3,3,7)
-plot(t, tau(1,:),LineWidth=1.5);
-xlabel('Time [s]');
-ylabel('Torque [N.m]')
-grid on
-
-subplot(3,3,8)
-plot(t, tau(2,:),LineWidth=1.5);
-xlabel('Time [s]');
-ylabel('Torque [N.m]')
-grid on
-
-subplot(3,3,9)
-plot(t, tau(3,:),LineWidth=1.5);
-xlabel('Time [s]');
-ylabel('Torque [N.m]')
-grid on
-exportgraphics(fig, "MPC_JointSpace.png")
-
-fig=figure(2);
-plot3(p_TrajCart(1,2:end-1),p_TrajCart(2,2:end-1),p_TrajCart(3,2:end-1),'--',LineWidth=1.5);
-hold on;grid on;
-plot3(p_Cart(1,2:end-1),p_Cart(2,2:end-1),p_Cart(3,2:end-1),LineWidth=1.5);
-hold off
-xlabel('x[m]');
-ylabel('y[m]');
-zlabel('z[m]');
-legend('Reference Trajectory','Tracking Trajectory','Location','best')
-exportgraphics(fig, "MPC_CartesianSpace.png")
-
-fig=figure(3);
-plot(t(:,1:end-1), e_Traj(:,1:end-1),LineWidth=1.5);
-xlabel('Time[s]')
-ylabel('RMS Tracking Error[m]')
-grid on
-title('Tracking Error')
-exportgraphics(fig, "MPC_TrackingError.png")
-
-fig = figure(4);
-subplot(3,1,1)
-plot(t(:,1:end-1), e_TrajXYZ(1,1:end-1),LineWidth=1.5)
-xlabel('Time[s]')
-ylabel('Error[m]')
-title('X Axis Error')
-grid on
-subplot(3,1,2)
-plot(t(:,1:end-1), e_TrajXYZ(2,1:end-1),LineWidth=1.5)
-xlabel('Time[s]')
-ylabel('Error[m]')
-title('Y Axis Error')
-grid on
-subplot(3,1,3)
-plot(t(:,1:end-1), e_TrajXYZ(3,1:end-1),LineWidth=1.5)
-xlabel('Time[s]')
-ylabel('Error[m]')
-title('Z Axis Error')
-grid on
-exportgraphics(fig, "MPC_TrackingErrorXYZ.png")
+% fig=figure(1);
+% subplot(3,3,1)
+% plot(t, q(1,1:end),LineWidth=1.5)
+% hold on
+% plot(t_MPC, q_ref(1,:),'r--',LineWidth=1.5)
+% legend('Actual','Desired')
+% hold off
+% xlabel('Time[s]')
+% ylabel('Angular Pos[rad]')
+% title('Joint 01')
+% grid on
+% % ylim([-2 +2])
+% subplot(3,3,2)
+% plot(t, q(2,1:end),LineWidth=1.5)
+% hold on
+% plot(t_MPC, q_ref(2,:),'r--',LineWidth=1.5)
+% legend('Actual','Desired')
+% hold off
+% xlabel('Time[s]')
+% ylabel('Angular Pos[rad]')
+% title('Joint 02')
+% grid on
+% % ylim([-2 +2])
+% subplot(3,3,3)
+% plot(t, q(3,1:end),LineWidth=1.5)
+% hold on
+% plot(t_MPC, q_ref(3,:),'r--',LineWidth=1.5)
+% legend('Actual','Desired')
+% hold off
+% xlabel('Time[s]')
+% ylabel('Angular Pos[rad]')
+% title('Joint 03')
+% grid on
+% % ylim([-2 +2])
+% 
+% subplot(3,3,4)
+% plot(t, e1(1,:),LineWidth=1.5);
+% xlabel('Time[s]')
+% ylabel('Angular Error[rad]')
+% grid on
+% % ylim([-2 +2])
+% subplot(3,3,5)
+% plot(t, e1(2,:),LineWidth=1.5);
+% xlabel('Time[s]')
+% ylabel('Angular Error[rad]')
+% grid on
+% % ylim([-2 +2])
+% subplot(3,3,6)
+% plot(t, e1(3,:),LineWidth=1.5);
+% xlabel('Time[s]')
+% ylabel('Angular Error[rad]')
+% grid on
+% % ylim([-2 +2])
+% 
+% 
+% subplot(3,3,7)
+% plot(t, U_controller(1,:),LineWidth=1.5);
+% xlabel('Time [s]');
+% ylabel('Torque [N.m]')
+% grid on
+% 
+% subplot(3,3,8)
+% plot(t, U_controller(2,:),LineWidth=1.5);
+% xlabel('Time [s]');
+% ylabel('Torque [N.m]')
+% grid on
+% 
+% subplot(3,3,9)
+% plot(t, U_controller(3,:),LineWidth=1.5);
+% xlabel('Time [s]');
+% ylabel('Torque [N.m]')
+% grid on
+% % exportgraphics(fig, "MPC_JointSpace.png")
+% 
+% fig=figure(2);
+% plot3(p_TrajCart(1,2:end-1),p_TrajCart(2,2:end-1),p_TrajCart(3,2:end-1),'--',LineWidth=1.5);
+% hold on;grid on;
+% plot3(p_Cart(1,2:end-1),p_Cart(2,2:end-1),p_Cart(3,2:end-1),LineWidth=1.5);
+% hold off
+% xlabel('x[m]');
+% ylabel('y[m]');
+% zlabel('z[m]');
+% legend('Reference Trajectory','Tracking Trajectory','Location','best')
+% % exportgraphics(fig, "MPC_CartesianSpace.png")
+% 
+% fig=figure(3);
+% plot(t(:,1:end-1), e_Traj(:,1:end-1),LineWidth=1.5);
+% xlabel('Time[s]')
+% ylabel('RMS Tracking Error[m]')
+% grid on
+% title('Tracking Error')
+% % exportgraphics(fig, "MPC_TrackingError.png")
+% 
+% fig = figure(4);
+% subplot(3,1,1)
+% plot(t(:,1:end-1), e_TrajXYZ(1,1:end-1),LineWidth=1.5)
+% xlabel('Time[s]')
+% ylabel('Error[m]')
+% title('X Axis Error')
+% grid on
+% subplot(3,1,2)
+% plot(t(:,1:end-1), e_TrajXYZ(2,1:end-1),LineWidth=1.5)
+% xlabel('Time[s]')
+% ylabel('Error[m]')
+% title('Y Axis Error')
+% grid on
+% subplot(3,1,3)
+% plot(t(:,1:end-1), e_TrajXYZ(3,1:end-1),LineWidth=1.5)
+% xlabel('Time[s]')
+% ylabel('Error[m]')
+% title('Z Axis Error')
+% grid on
+% % exportgraphics(fig, "MPC_TrackingErrorXYZ.png")

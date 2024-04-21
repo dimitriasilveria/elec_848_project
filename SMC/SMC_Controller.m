@@ -34,18 +34,44 @@ t = 0:dt_max:t_max;
 g = 9.8;
 %% Initialization
 
-%Trajectory
-
+%Trajectory 01
 q_ref = [1.75+1*sin(2*pi*1*t);-1.8+0.5*sin(2*pi*1*t);1.75+0.3*cos(2*pi*1*t)];
 dq_ref = 2*pi*[1*cos(2*pi*1*t);0.5*cos(2*pi*1*t);-0.3*sin(2*pi*1*t)];
 ddq_ref = 4*pi*pi*[-1*sin(2*pi*1*t);-0.5*sin(2*pi*1*t);-0.3*cos(2*pi*1*t)];
 
-%Initializa system states
+
+% %Trajectory 02
+% qt = [pi/4;pi/6;-pi/4];
+% q0 = [0;0;0];
+% traj_endPoint = [q0 qt];
+% t_traj_endPoint = [0 t(end)];
+% q_ref = zeros(3,length(t));
+% 
+% % for i = 1:n
+% %     q_ref(i,:) = interpn(t_traj_endPoint,traj_endPoint(i,:),t_MPC,'spline');
+% % end
+% 
+% for i = 1:n
+%     pol_traj = polyfit(t_traj_endPoint,traj_endPoint(i,:),5);
+%     q_ref(i,:) = polyval(pol_traj,t);
+% end
+% 
+% diff_q = diff(q_ref,1,2);
+% dq_ref = diff_q./dt_max;
+% dq_ref = [zeros(3,1) dq_ref];
+% 
+% diff_dq = diff(dq_ref,1,2);
+% ddq_ref = diff_dq./dt_max;
+% ddq_ref = [zeros(3,1) ddq_ref];
+
+
+%Initialize system states
 q = zeros(3,length(t));
-% q(:,1) = [pi/2;-8*pi/9;5*pi/6];
-q(:,1) = q_ref(:,1);
+q(:,1) = [pi/2;-8*pi/9;5*pi/6];
+% q(:,1) = q_ref(:,1);
 dq = zeros(3,length(t));
 ddq = zeros(3,length(t));
+
 
 %Tracking Errors
 e1 = zeros(3,length(t));
@@ -62,7 +88,7 @@ e_Traj = zeros(1,length(t));
 e_TrajXYZ = zeros(3,length(t));
 
 %% SMC Controller
-
+tic
 for i = 1:length(t)
     
     %Dynamics from MPC Model
@@ -72,7 +98,7 @@ for i = 1:length(t)
     
     %Input torque
     U(:,i) = M*q_ddot_U(:,i) + C*dq(:,i) + G; %-tau_d;
-    % U(:,i) = min(20, max(-20, U(:,i)));
+    % U(:,i) = min(30, max(-30, U(:,i)));
     
     %Manipulator Dynamics
     ddq(:,i) = M\(U(:,i) - C*dq(:,i) - G);
@@ -88,7 +114,7 @@ for i = 1:length(t)
     e_Traj(:,i) = rms(p_TrajCart(:,i)-p_Cart(:,i));
     e_TrajXYZ(:,i) = (p_TrajCart(:,i)-p_Cart(:,i));
 end
-
+toc
 
 %% 
 
@@ -164,7 +190,7 @@ plot(t, U(3,:),LineWidth=1.5);
 xlabel('Time [s]');
 ylabel('Torque [N.m]')
 grid on
-exportgraphics(fig, "SMC_JointSpace.png")
+% exportgraphics(fig, "SMC_JointSpace.png")
 
 fig=figure(2);
 plot3(p_TrajCart(1,2:end-1),p_TrajCart(2,2:end-1),p_TrajCart(3,2:end-1),'--',LineWidth=1.5);
@@ -175,7 +201,7 @@ xlabel('x[m]');
 ylabel('y[m]');
 zlabel('z[m]');
 legend('Reference Trajectory','Tracking Trajectory','Location','best')
-exportgraphics(fig, "SMC_CartesianSpace.png")
+% exportgraphics(fig, "SMC_CartesianSpace.png")
 
 fig=figure(3);
 plot(t(:,1:end-1), e_Traj(:,1:end-1),LineWidth=1.5);
@@ -183,7 +209,7 @@ xlabel('Time[s]')
 ylabel('RMS Tracking Error[m]')
 grid on
 title('Tracking Error')
-exportgraphics(fig, "SMC_TrackingError.png")
+% exportgraphics(fig, "SMC_TrackingError.png")
 
 fig = figure(4);
 subplot(3,1,1)
@@ -204,9 +230,9 @@ xlabel('Time[s]')
 ylabel('Error[m]')
 title('Z Axis Error')
 grid on
-exportgraphics(fig, "SMC_TrackingErrorXYZ.png")
+% exportgraphics(fig, "SMC_TrackingErrorXYZ.png")
 
-
+% 
 % fig  = figure(3);
 % subplot(3,1,1)
 % plot(t, p_TrajCart(1,:),LineWidth=1.5);
