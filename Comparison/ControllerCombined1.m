@@ -80,8 +80,8 @@ ddq_ref = [zeros(3,1) ddq_ref];
 % ddq_ref = 4*pi*pi*[-1*sin(2*pi*1*t_MPC);-0.5*sin(2*pi*1*t_MPC);-0.3*cos(2*pi*1*t_MPC)];
 
 %Initialize system states
-q = zeros(3,length(t));
-% q(:,1) = [pi/2;-8*pi/9;5*pi/6];
+% q = zeros(3,length(t));
+q(:,1) = [pi/2;-8*pi/9;5*pi/6];
 q(:,1) = q_ref(:,1);
 dq = zeros(3,length(t));
 ddq = zeros(3,length(t));
@@ -106,7 +106,7 @@ e_TrajXYZ = zeros(3,length(t));
 % Tau_dist1 = 1*rand(n,length(t_MPC));
 % Tau_dist = Tau_dist1 - mean(Tau_dist1);
 Tau_dist = zeros(n,length(t_MPC));
-
+% 
 
 %% MPC Controller
 tic
@@ -215,8 +215,8 @@ phi = 0.5;
 
 %Initialize system states
 q = zeros(3,length(t));
-% q(:,1) = [pi/2;-8*pi/9;5*pi/6];
-q(:,1) = q_ref(:,1);
+q(:,1) = [pi/2;-8*pi/9;5*pi/6];
+% q(:,1) = q_ref(:,1);
 dq = zeros(3,length(t));
 ddq = zeros(3,length(t));
 
@@ -247,7 +247,7 @@ for i = 1:length(t)
     %Input torque
     U(:,i) = M*q_ddot_U(:,i) + C*dq(:,i) + G + Tau_dist(:,i); %-tau_d;
     
-    % U(:,i) = min(100, max(-100, real(U(:,i))));
+    U(:,i) = min(100, max(-100, real(U(:,i))));
 
     % disp(M);
     % disp(C);
@@ -349,7 +349,7 @@ grid on
 
 
 subplot(3,3,7)
-plot(t, U_controller_MPC(1,:),LineWidth=1.5);
+plot(t, tau(1,:),LineWidth=1.5);
 hold on
 plot(t, U_controller_SMC(1,:),LineWidth=1.5);
 hold off
@@ -359,7 +359,7 @@ ylabel('Torque [N.m]')
 grid on
 
 subplot(3,3,8)
-plot(t, U_controller_MPC(2,:),LineWidth=1.5);
+plot(t, tau(2,:),LineWidth=1.5);
 hold on
 plot(t, U_controller_SMC(2,:),LineWidth=1.5);
 hold off
@@ -369,7 +369,7 @@ ylabel('Torque [N.m]')
 grid on
 
 subplot(3,3,9)
-plot(t, U_controller_MPC(3,:),LineWidth=1.5);
+plot(t, tau(3,:),LineWidth=1.5);
 hold on
 plot(t, U_controller_SMC(3,:),LineWidth=1.5);
 hold off

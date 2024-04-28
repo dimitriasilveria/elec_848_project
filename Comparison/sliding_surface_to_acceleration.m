@@ -16,9 +16,9 @@ for i =1:length(sat)
 
     if e(i)== 0
         % q_ddot(i) = q_d_ddot(i);
-        q_ddot(i) = q_d_ddot(i)- s_dot(i);
+        q_ddot(i) = q_d_ddot(i);
     else
         q_ddot(i) = q_d_ddot(i) + mu_1*(m/p)*e(i).^((m/p)-1).*e_dot(i) + mu_2*(k/l)*e(i).^((k/l)-1).*e_dot(i) - s_dot(i);
     end
 end
-disp(length(q_ddot));
+% disp(length(q_ddot));
